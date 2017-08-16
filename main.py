@@ -13,8 +13,6 @@ HARDCODED_LINKS = ["http://icorating.com/project/2/Decent"]
 ERROR_PROJECTS = []
 
 import time
-from bs4 import BeautifulSoup
-import openpyxl
 from selenium import webdriver
 
 def goto_past_ICOs(driver):
@@ -47,16 +45,7 @@ def get_homepage_links(driver):
 # parse_project:
 # Parses the ICOrating project page, and returns the data as a list.
 # [0] = Project Name
-# [1-9] = Overview: 
-#        [1] deep rating
-#        [2] hype score
-#        [3] risk score
-#        [4] invest score
-#        [5] category
-#        [6] description
-#        [7] founded year
-#        [8] founded location
-#        [9] list containing all social links (including website)
+# [1-10] = Overview: 
 
 def parse_project(driver):
     project_data = []
@@ -66,75 +55,98 @@ def parse_project(driver):
     print "  title...done"
     
     overview_data = get_overview(driver)
-    if (overview_data == "error"):
-        ERROR_PROJECTS.append(title + "overview")
-        project_data.extend([0,0,0,0,0,0,0,0])
-        print "  overview...ERROR"
-    else:
-        project_data.extend(overview_data)
-        print "  overview...done"
+    project_data.extend(overview_data)
+    print "  overview...done"
     
+    progress_data = get_progress(driver)
+    project_data.extend(progress_data)
+    print "  progress...done"
+    
+    tab_data = get_tabs(driver)
+    project_data.extend(tab_data)
+    print "  tabs...done"
     
     return project_data
 
-# Returns the project title
 def get_title(driver):
+# Returns the project title
     title = driver.find_element_by_class_name("ico-name-title").text
     return title
 
-# Returns a list containing all 8 elements from the overview, or "error" if number of elements != 8
 def get_overview(driver):
-    overview_data = []
+# Returns a list containing all information from the overview.
+# [0-9] = deep rating, hype score, risk score. invest score. category. description
+#            founded year, founded location, list of all links, other.
+
+    overview_data = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
     overview = driver.find_element_by_class_name("ico-overview")
     # deep rating
     header = overview.find_element_by_class_name("clearfix")
     deep_rating = header.find_element_by_class_name("ico-card-score")
     rating = deep_rating.find_element_by_class_name("ico-card-score__status").text
-    overview_data.append(rating)
+    overview_data[0] = rating
     
     table = overview.find_element_by_class_name("ico-card-table")
     table_items = table.find_elements_by_class_name("ico-card-table__tr")
-    # if overview table does not have all 8 sections, note it and skip
-    if (len(table_items) != 8):
-        return "error"
-    # hype score
-    hype_ele = table_items[0].find_elements_by_class_name("ico-card-table__td")
-    assert(hype_ele[0].text == "Hype score: ")
-    overview_data.append(hype_ele[1].text)
-    # risk score
-    risk_ele = table_items[1].find_elements_by_class_name("ico-card-table__td")
-    assert(risk_ele[0].text == "Risk score: ")
-    overview_data.append(risk_ele[1].text)
-    # invest score
-    invest_ele = table_items[2].find_elements_by_class_name("ico-card-table__td")
-    assert(invest_ele[0].text == "Invest score: ")
-    overview_data.append(invest_ele[1].text)
-    # category
-    category_ele = table_items[3].find_elements_by_class_name("ico-card-table__td")
-    assert(category_ele[0].text == "Category: ")
-    overview_data.append(category_ele[1].text)
-    # description
-    desc_ele = table_items[4].find_elements_by_class_name("ico-card-table__td")
-    assert(desc_ele[0].text == "Description: ")
-    overview_data.append(desc_ele[1].text)
-    # founded
-    found_ele = table_items[5].find_elements_by_class_name("ico-card-table__td")
-    assert(found_ele[0].text == "Founded: ")
-    founded = found_ele[1].text.split(", ")
-    overview_data.extend(founded)
-    # website: no need because it is also in social
-    # social
-    social_ele = table_items[7].find_elements_by_class_name("ico-card-table__td")
-    assert(social_ele[0].text == "Social: ")
-    social_table = social_ele[1].find_element_by_class_name("ico-card-socials")
-    all_socials = {}
-    for link in social_table.find_elements_by_tag_name("a"):
-        name = link.get_attribute("title")
-        url = link.get_attribute("href")
-        all_socials[name] = url
-    overview_data.append(all_socials)
+    
+    for ele in table_items:
+        contents = ele.find_elements_by_class_name("ico-card-table__td")
+        varname = contents[0].text
+        if (varname == "Hype score: "):
+            overview_data[1] = contents[1].text
+        elif (varname == "Risk score: "):
+            overview_data[2] = contents[1].text
+        elif (varname == "Invest score: "):
+            overview_data[3] = contents[1].text
+        elif (varname == "Category: "):
+            overview_data[4] = contents[1].text
+        elif (varname == "Description: "):
+            overview_data[5] = contents[1].text
+        elif (varname == "Founded: "):
+            founded = contents[1].text.split(", ")
+            overview_data[6] = founded[0]
+            overview_data[7] = founded[1]
+        elif (varname == "Website: "):
+            pass
+        elif (varname == "Social: "):
+            social_table = contents[1].find_element_by_class_name("ico-card-socials")
+            all_socials = {}
+            for link in social_table.find_elements_by_tag_name("a"):
+                name = link.get_attribute("title")
+                url = link.get_attribute("href")
+                all_socials[name] = url
+            overview_data[8] = all_socials
+        else:   # ANY OTHER VARIABLES. Saved as comma separated.
+            other = varname + ": " + contents[1].text
+            if (overview_data[10] == -1):
+                overview_data[10] = other
+            else:
+                overview_data[10] = overview_data[10] + ", " + other
     
     return overview_data
+
+def get_progress(driver):
+# Returns a list containing fundraising progress information
+# [0-3] = BTC, ETH, USD, other.
+    progress_data = [-1,-1,-1,-1]
+    
+    
+    return progress_data
+
+def get_tabs(driver):
+# Returns a list containing information from all 4 tabs.
+# [0-2] = Project details: Features, Similar projects, other.
+# [3-9] = ICO details: ICO date, Tokens distribution, Token Sales, 
+#            Bounty camping, Escrow, Accepts, other.
+# [10-13] = Tech: Technical details, The source code, Proof of developer, other.
+# [14] = Team: other.
+    tabs_data = [-1,-1,-1,
+                 -1,-1,-1,-1,-1,-1,-1,
+                 -1,-1,-1,-1,
+                 -1]
+    
+    
+    return tabs_data
 
 driver = webdriver.Chrome()
 
