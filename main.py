@@ -49,10 +49,10 @@ def parse_project(driver):
 # [1-10] = Overview
 # [11-14] = Progress
 # [15-17] = Tabs->Project Details
-# [18-24] = Tabs->ICO Details
-# [25-28] = Tabs->Tech
-# [29] = Tabs->Team
-# [30] = Summary
+# [18-25] = Tabs->ICO Details
+# [26-29] = Tabs->Tech
+# [30] = Tabs->Team
+# [31] = Summary
     project_data = []
     title = get_title(driver)
     project_data.append(title)
@@ -101,7 +101,7 @@ def parse_founded(year_loc):
 # [0-1] = year, location. Defaults to -1 if either is not available.
     split = year_loc.split(", ")
     founded_list = [-1,-1]
-    if (len(split) == 0):
+    if (len(split) == 0 or year_loc == ""):
         return founded_list
     elif (len(split) == 1):
         try:
@@ -212,10 +212,10 @@ def get_progress(driver):
 def get_tabs(driver):
 # Returns a list containing information from all 4 tabs.
 # [0-2] = Project details: Features, Similar projects, other.
-# [3-9] = ICO details: ICO date, Tokens distribution, Token Sales, 
+# [3-10] = ICO details: ICO date, Tokens distribution, Token Sales, 
 #            Bounty camping, Escrow, Accepts, other.
-# [10-13] = Tech: Technical details, The source code, Proof of developer, other.
-# [14] = Team: other.
+# [11-14] = Tech: Technical details, The source code, Proof of developer, other.
+# [15] = Team: other.
 # If no tab information, defaults to -1.
     tabs_data = [-1,-1,"N/A",
                  -1,-1,-1,-1,-1,-1,"N/A",
@@ -265,12 +265,14 @@ def get_tabs(driver):
             tabs_data[7] = contents[1].text
         elif (varname == "Accepts: "):
             tabs_data[8] = contents[1].text
+        elif (varname == "Dividends: "):
+            tabs_data[9] = contents[1].text
         else:   # ANY OTHER VARIABLES. Saved as comma separated.
             other = varname + ": " + contents[1].text
-            if (tabs_data[9] == "N/A"):
-                tabs_data[9] = other
+            if (tabs_data[10] == "N/A"):
+                tabs_data[10] = other
             else:
-                tabs_data[9] = tabs_data[9] + ", " + other
+                tabs_data[10] = tabs_data[10] + ", " + other
     
     # TECH
     tabs_buttons[2].click()
@@ -279,17 +281,17 @@ def get_tabs(driver):
         contents = ele.find_elements_by_class_name("ico-card-table__td")
         varname = contents[0].text
         if (varname == "Technical details: "):
-            tabs_data[10] = contents[1].text
-        elif (varname == "The source code: "):
             tabs_data[11] = contents[1].text
-        elif (varname == "Proof of developer: "):
+        elif (varname == "The source code: "):
             tabs_data[12] = contents[1].text
+        elif (varname == "Proof of developer: "):
+            tabs_data[13] = contents[1].text
         else:   # ANY OTHER VARIABLES. Saved as comma separated.
             other = varname + ": " + contents[1].text
-            if (tabs_data[13] == "N/A"):
-                tabs_data[13] = other
+            if (tabs_data[14] == "N/A"):
+                tabs_data[14] = other
             else:
-                tabs_data[13] = tabs_data[13] + ", " + other
+                tabs_data[14] = tabs_data[14] + ", " + other
     
     # TEAM
     tabs_buttons[3].click()
@@ -298,10 +300,10 @@ def get_tabs(driver):
         contents = ele.find_elements_by_class_name("ico-card-table__td")
         varname = contents[0].text
         other = varname + ": " + contents[1].text
-        if (tabs_data[14] == "N/A"):
-            tabs_data[14] = other
+        if (tabs_data[15] == "N/A"):
+            tabs_data[15] = other
         else:
-            tabs_data[14] = tabs_data[14] + ", " + other
+            tabs_data[15] = tabs_data[15] + ", " + other
     
     return tabs_data
 
@@ -324,10 +326,10 @@ def get_summary(driver):
 
 def index_to_col(index):
 # Returns the column letter corresponding to the index returned from founded_list
-    to_alpha = {26:"AA", 27:"AB", 28:"AC", 29:"AD", 30:"AE"}
+    to_alpha = {26:"AA", 27:"AB", 28:"AC", 29:"AD", 30:"AE", 31:"AF"}
     if (index < 26):
         return str(chr(index+65))
-    elif (index < 31):
+    elif (index < 32):
         return to_alpha[index]
     else:
         raise InvalidArgumentException("founded_list has too many elements")
@@ -360,14 +362,15 @@ def generate_workbook():
     new_data1['V1'] = "Bounty Camping"
     new_data1['W1'] = "Escrow"
     new_data1['X1'] = "Accepts"
-    new_data1['Y1'] = "Other ICO details"
-    new_data1['Z1'] = "Technical Details"
-    new_data1['AA1'] = "Source Code"
-    new_data1['AB1'] = "Proof of Developer"
-    new_data1['AC1'] = "Other tech"
-    new_data1['AD1'] = "Other team"
-    new_data1['AE1'] = "Summary"
-    for i in range(0, 31):
+    new_data1['Y1'] = "Dividends"
+    new_data1['Z1'] = "Other ICO details"
+    new_data1['AA1'] = "Technical Details"
+    new_data1['AB1'] = "Source Code"
+    new_data1['AC1'] = "Proof of Developer"
+    new_data1['AD1'] = "Other tech"
+    new_data1['AE1'] = "Other team"
+    new_data1['AF1'] = "Summary"
+    for i in range(0, 32):
         new_data1.column_dimensions[index_to_col(i)].width = 30
     new_data1.row_dimensions[1].height = 30
     
