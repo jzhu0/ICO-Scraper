@@ -213,12 +213,12 @@ def get_tabs(driver):
 # Returns a list containing information from all 4 tabs.
 # [0-2] = Project details: Features, Similar projects, other.
 # [3-10] = ICO details: ICO date, Tokens distribution, Token Sales, 
-#            Bounty camping, Escrow, Accepts, other.
+#            Bounty camping, Escrow, Accepts, Dividends, other.
 # [11-14] = Tech: Technical details, The source code, Proof of developer, other.
 # [15] = Team: other.
 # If no tab information, defaults to -1.
     tabs_data = [-1,-1,"N/A",
-                 -1,-1,-1,-1,-1,-1,"N/A",
+                 -1,-1,-1,-1,-1,-1,-1,"N/A",
                  -1,-1,-1,"N/A",
                  "N/A"]
     description = driver.find_element_by_class_name("ico-description")
