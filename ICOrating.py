@@ -1,6 +1,11 @@
 '''
 Created on Aug 15, 2017
 
+Scrapes through the "Past" tab from icorating.com.
+Navigates to each project, pulling a variety of variables from the overview, description, and summary.
+    (Detailed in the get_ methods)
+Saves to an excel spreadsheet with name=NEW_DATASET_FILENAME.
+
 @author: Jason Zhu
 '''
 NEW_DATASET_FILENAME = "ICOrating Past Projects - 8.16.2017.xlsx"

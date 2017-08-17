@@ -1,6 +1,9 @@
 '''
 Created on Aug 16, 2017
 
+Scrapes through all listed ICOs on smithandcrown.com. Pulls all basic data from the table for each ICO.
+Saves to an excel spreadsheet with name=NEW_DATASET_FILENAME.
+
 @author: Jason Zhu
 '''
 NEW_DATASET_FILENAME = "Smith and Crown Past Projects - 8.17.2017.xlsx"
