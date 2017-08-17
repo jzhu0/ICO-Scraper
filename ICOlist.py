@@ -1,7 +1,7 @@
 '''
 Created on Aug 17, 2017
 
-Scrapes through the "Over" tab on ico-list.com, pulling only the listed ICO names.
+Scrapes through the "Over" tab on ico-list.com, scraping all the listed ICO names.
 Saves to an excel spreadsheet with name=NEW_DATASET_FILENAME.
 
 @author: Jason Zhu
